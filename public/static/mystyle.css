@@ -1,0 +1,141 @@
+body {
+}
+
+.navbar {
+}
+
+.navtitle {
+    margin: auto;
+}
+
+.input.is-info {
+    display: inline-block;
+    width: 75%;
+}
+
+.input.is-danger {
+    display: inline-block;
+    width: 25%;
+}
+
+.textarea.is-info {
+    height: 450px;
+}
+
+.post-modify {
+    margin: 50px 50px 30px 50px;
+}
+
+.button.is-black {
+    display: block;
+    margin: auto;
+}
+
+.buttoncontrol {
+    width: 300px;
+    display: inline;
+    margin: auto;
+}
+
+.invisiblebuttoncontrol {
+    display: inline-block;
+    width: 32%;
+}
+
+.button.is-black {
+    display: inline-block;
+    margin: 20px;
+}
+
+.modal-content {
+    text-align: center;
+}
+
+.input.is-rounded {
+    display: block;
+    width: 200px;
+    margin: auto;
+}
+
+.buttoncontrol2 {
+    width: 300px;
+    display: inline;
+    margin: auto;
+}
+.invisiblebuttoncontrol2 {
+    display: block;
+    width: 10%;
+}
+
+.button.is-black.a {
+    display: inline-block;
+    width: 100px;
+}
+
+#postUsername {
+    width: 250px;
+}
+.bg-sparta {
+    background-color: #f8f9fa !important;
+    height: 100px;
+}
+
+.btn-sparta {
+    color: #ffffff !important;
+    background-color: black !important;
+    border-color: black !important;
+}
+
+.btn-outline-sparta {
+    color: black !important;
+    background-color: #ffffff !important;
+    border-color: black !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #ffffff;
+}
+
+.navbar-dark .navbar-nav .nav-link:focus,
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ffffff;
+}
+
+.wrap {
+    width: 80%;
+    max-width: 600px;
+    margin: 10px auto;
+}
+
+.modal-header {
+    border-bottom-color: #ffffff;
+}
+
+.modal-footer {
+    border-top-color: #ffffff;
+}
+
+.alert {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+@media screen and (min-width: 576px) {
+    .alert {
+        width: fit-content;
+        max-width: 480px;
+    }
+}
+
+.alert-sparta {
+    color: black;
+    background-color: #ffe7ff;
+    border-color: #ffcde7;
+}
+
+.alert-sparta .alert-link {
+    color: #360000;
+}

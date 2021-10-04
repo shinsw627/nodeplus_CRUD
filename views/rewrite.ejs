@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+        <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+        <link
+            rel="shortcut icon"
+            href="/static/favicon.ico"
+            type="image/x-icon"
+        />
+        <!-- Bulma CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+        />
+        <!-- Bootstrap CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+            integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l"
+            crossorigin="anonymous"
+        />
+        <!-- Font Awesome CSS -->
+        <link
+            href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+            rel="stylesheet"
+        />
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script
+            src="https://code.jquery.com/jquery-3.5.1.js"
+            integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+            integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
+            crossorigin="anonymous"
+        ></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"></script>
+        <script src="../public/static/api.js"></script>
+        <link href="/static/mystyle.css" rel="stylesheet" />
+        <title>게시판</title>
+        <script>
+            const queryString = window.location.search
+            const urlParams = new URLSearchParams(queryString)
+            const postId = urlParams.get('postId')
+
+            $(document).ready(function () {
+                get_detail()
+            })
+
+            function get_detail() {
+                $.ajax({
+                    type: 'GET',
+                    url: `/api/posts/${postId}`,
+                    data: {},
+                    error: function (xhr, status, error) {
+                        if (status == 404) {
+                            alert('존재하지 않는 글입니다.')
+                        }
+                        window.location.href = '/board'
+                    },
+                    success: function (response) {
+                        $('#postload').empty()
+                        let postDetail = response['posts']
+                        let chkPw = postDetail['contentPw']
+                        let htmlTemp = `<div class="post-modify">
+                              <div>
+                                <label class="label">제목</label>
+                                <input class="input is-info" id="postTitle" type="text" placeholder="제목을 입력하세요" value="${postDetail['title']}">
+                              </div>
+                            
+                              <label class="label">내용</label><textarea class="textarea is-info" id="postContent" placeholder="내용을 입력하세요">${postDetail['content']}</textarea>
+                            
+                            </div>
+                            <button class="button is-black" onclick="openModal(${chkPw})">수정하기</button>`
+                        let modalTemp = `<div class="modal">
+                                            <div class="modal-background"></div>
+                                            <div class="modal-content">
+                                              <h3>비밀번호를 입력하세요</h3>
+                                              <input class="input is-rounded" type="number" placeholder="비밀번호 숫자4자리" width="200px" id="updatePw">
+                                              <div class="buttoncontrol2">
+                                              <div class="invisiblebuttoncontrol2"></div>
+                                              <button class="button is-black a" onclick="updatePost(${chkPw})">저장</button>
+                                              <button class="button is-black a" onclick="closeModal()">닫기</button>
+                                              </div>
+                                            </div>
+                                        </div>`
+                        $('#postload').append(htmlTemp)
+                        $('body').append(modalTemp)
+                    },
+                })
+            }
+            function openModal(chkPw) {
+                const modal = document.querySelector('.modal')
+                modal.style.display = 'flex'
+            }
+            function closeModal() {
+                const modal = document.querySelector('.modal')
+                modal.style.display = 'none'
+            }
+            function updatePost(chkPw) {
+                const title = $('#postTitle').val()
+                const content = $('#postContent').val()
+                const contentPw = parseInt($('#updatePw').val())
+                const date = Date()
+
+                if (contentPw != chkPw) {
+                    alert('패스워드를 확인하세요')
+                    return
+                } else if (title == '') {
+                    alert('제목을 입력하세요.')
+                    return
+                } else if (content == '') {
+                    alert('글 내용을 입력하세요.')
+                    return
+                } else if (contentPw == '') {
+                    alert('글 비밀번호를 입력하세요.')
+                    return
+                } else if (typeof contentPw != 'number') {
+                    alert('비밀번호는 숫자 4자리만 입력하세요.')
+                    return
+                } else if (contentPw > 9999) {
+                    alert('비밀번호는 숫자 4자리만 입력하세요.')
+                    return
+                } else {
+                    $.ajax({
+                        type: 'PATCH',
+                        url: `/api/posts/${postId}`,
+                        data: {
+                            title: title,
+                            content: content,
+                        },
+                        success: function (response) {
+                            if (response['result'] == 'success') {
+                                alert('수정 완료')
+                                location.href = '/board'
+                            }
+                        },
+                    })
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <!-- Just an image -->
+        <nav class="navbar navbar-light bg-light">
+            <a href="/"><h5 class="navtitle">게시판</h5></a>
+            <a class="navbar-brand" href="/board">
+                <img
+                    src="https://i.pinimg.com/564x/b5/70/d8/b570d831b240df6c033a4e2f8d2b7740.jpg"
+                    width="60"
+                    height="60"
+                    alt=""
+                />
+            </a>
+        </nav>
+        <div class="postbar" id="postload">
+            <div class="post-modify">
+                <div>
+                    <input
+                        class="input is-info"
+                        id="postTitle"
+                        type="text"
+                        placeholder="제목을 입력하세요"
+                    /><input
+                        class="input is-danger"
+                        id="postPw"
+                        type="number"
+                        min="0"
+                        max="9999"
+                        maxlength="4"
+                        placeholder="비밀번호 숫자만4자리"
+                    />
+                </div>
+
+                <textarea
+                    class="textarea is-info"
+                    id="postContent"
+                    placeholder="내용을 입력하세요"
+                ></textarea>
+            </div>
+            <button class="button is-black" onclick="">저장</button>
+        </div>
+    </body>
+</html>
