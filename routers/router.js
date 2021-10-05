@@ -1,6 +1,7 @@
 const express = require('express')
 const Posts = require('../models/posts')
 const User = require('../models/user')
+const Comments = require('../models/comment')
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -29,25 +30,36 @@ router.post('/users', async (req, res) => {
             return
         }
 
-        const existUsers = await User.find({
-            $or: [{ email }, { nickname }],
-        })
-        if (existUsers.length) {
+        const existEmail = await User.find({ email })
+        const existNickname = await User.find({ nickname })
+        if (existEmail.length) {
             res.status(400).send({
-                errorMessage: '이미 가입된 이메일 또는 닉네임이 있습니다.',
+                errorMessage: '이미 가입된 이메일 입니다.',
             })
             return
         }
-
-        const eng_check = /^[a-z]+[a-z0-9]{2,15}$/g
-        const pw_check = /^[a-z]+[a-z0-9]{3,19}$/g
+        if (existNickname.length) {
+            res.status(400).send({
+                errorMessage: '이미 가입된 닉네임 입니다.',
+            })
+            return
+        }
+        const nick_check = /^[a-zA-Z가-힣]+[a-zA-z가-힣0-9]{3,7}$/g
+        const eng_check = /^[a-zA-Z]+[a-z0-9]{2,15}$/g
+        const pw_check = /^[a-zA-Z]+[a-z0-9]{3,19}$/g
         const email_check =
             /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i
 
         const id = email.split('@')[0]
 
         const regex = new RegExp(id)
-
+        if (!nick_check.test(nickname)) {
+            res.status(400).send({
+                errorMessage:
+                    '닉네임은 한글,영어로 시작하는 숫자를 이용한 4~8자여야만합니다.',
+            })
+            return
+        }
         if (!eng_check.test(id)) {
             res.status(400).send({
                 errorMessage: '아이디는 영문자로 시작하는 3~16자여야만 합니다.',
@@ -92,7 +104,6 @@ router.post('/users', async (req, res) => {
 
 router.post('/auth', async (req, res) => {
     const { email, password } = req.body
-    console.log(req.body)
     const user = await User.findOne({
         email: email,
     })
@@ -137,17 +148,18 @@ router.get('/posts', async (req, res, next) => {
         next(err)
     }
 })
-
+//글 상세 조회
 router.get('/posts/:postId', async (req, res) => {
     const { postId } = req.params
     posts = await Posts.findOne({ postId: postId })
-    res.json({ posts: posts })
+    comments = await Comments.find({ postId: postId }).sort('-postId')
+    res.json({ posts: posts, comments: comments })
 })
 
 //글 작성
 router.post('/write', async (req, res) => {
-    const { postId, userName, title, content, contentPw, date } = req.body
-    await Posts.create({ postId, userName, title, content, contentPw, date })
+    const { postId, nickname, title, content, contentPw, date } = req.body
+    await Posts.create({ postId, nickname, title, content, contentPw, date })
 
     res.send({ result: 'success' })
 })
@@ -175,4 +187,13 @@ router.delete('/posts/:postId', async (req, res) => {
     }
     res.send({ result: 'success' })
 })
+
+//댓글 작성
+router.post('/writecomments', async (req, res) => {
+    const { postId, commentId, nickname, content, date } = req.body
+    await Comments.create({ postId, commentId, nickname, content, date })
+
+    res.send({ result: 'success' })
+})
+
 module.exports = router

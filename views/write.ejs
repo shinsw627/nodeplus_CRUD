@@ -52,6 +52,37 @@
         <script src="../public/static/api.js"></script>
         <title>글쓰기</title>
         <script>
+            function getSelf(callback) {
+                $.ajax({
+                    type: 'GET',
+                    url: '/api/users/me',
+                    headers: {
+                        authorization: `Bearer ${localStorage.getItem(
+                            'token'
+                        )}`,
+                    },
+                    success: function (response) {
+                        callback(response.user)
+                    },
+                    error: function (xhr, status, error) {
+                        if (status == 401) {
+                            alert('로그인이 필요합니다.')
+                        } else {
+                            localStorage.clear()
+                            alert(
+                                '알 수 없는 문제가 발생했습니다. 관리자에게 문의하세요.'
+                            )
+                        }
+                        window.location.href = '/'
+                    },
+                })
+            }
+            $(document).ready(function () {
+                getSelf(function (u) {
+                    user = u
+                })
+            })
+
             //글쓰기
             function write_post() {
                 const postId = Date.now()
@@ -85,7 +116,7 @@
                         url: `/api/write`,
                         data: {
                             postId: postId,
-                            userName: userName,
+                            nickname: user.nickname,
                             title: title,
                             content: content,
                             contentPw: contentPw,
@@ -105,7 +136,7 @@
     <body>
         <!-- Just an image -->
         <nav class="navbar navbar-light bg-light">
-            <a href="/"><h5 class="navtitle">게시판</h5></a>
+            <a href="/board"><h5 class="navtitle">게시판</h5></a>
             <h5 class="navtitle">글쓰기</h5>
             <a class="navbar-brand" href="/">
                 <img
@@ -115,6 +146,13 @@
                     alt=""
                 />
             </a>
+            <button
+                type="button"
+                class="btn btn-outline-sparta"
+                onclick="signOut()"
+            >
+                로그아웃하기
+            </button>
         </nav>
         <div class="postbar" id="postload">
             <div class="post-modify">

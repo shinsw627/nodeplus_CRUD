@@ -54,7 +54,12 @@
             $(document).ready(function () {
                 get_posts()
             })
-
+            let user
+            getSelf(function (u) {
+                user = u
+                console.log(user)
+            })
+            console.log(user)
             function get_posts() {
                 $('#postsList tbody').empty()
 
@@ -72,15 +77,15 @@
                 })
             }
             function make_list(item, i) {
-                if (item['userName'] == '') {
-                    item['userName'] = 'Guest'
+                if (item['nickname'] === ('' || undefined)) {
+                    item['nickname'] = 'Guest'
                 }
                 let pretitle = item['title'].substring(0, 15)
                 let previewContent = item['content'].substring(0, 25)
 
                 let htmlTemp = `<tr>
                                 <th scope="row">${i}</th>
-                                <td>${item['userName']}</td>
+                                <td>${item['nickname']}</td>
                                 <td><a style="color :#007bff;" onclick="location.href='/detail?postId=${item['postId']}'">${pretitle}</a></td>
                                 <td><a style="color :#007bff;" onclick="location.href='/detail?postId=${item['postId']}'">${previewContent}...</a></td>
                                 <td>${item['date']}</td>
@@ -96,7 +101,7 @@
     <body>
         <!-- Just an image -->
         <nav class="navbar navbar-light bg-light">
-            <a href="/"><h5 class="navtitle">게시판</h5></a>
+            <a href="/board"><h5 class="navtitle">게시판</h5></a>
             <a href="/write">글쓰기</a>
             <a class="navbar-brand" href="/">
                 <img

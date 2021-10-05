@@ -139,3 +139,15 @@ body {
 .alert-sparta .alert-link {
     color: #360000;
 }
+.message.is-dark {
+    max-width: 800px;
+    margin: auto;
+}
+#commentarea {
+    max-width: 800px;
+    margin: auto;
+}
+#commentload {
+    max-width: 800px;
+    margin: auto;
+}
