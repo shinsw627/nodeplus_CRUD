@@ -1,13 +1,13 @@
 const mongoose = require('mongoose')
 
 const { Schema } = mongoose
-const postsSchema = new Schema({
+const likeSchema = new Schema({
     postId: {
         type: Number,
         required: true,
         unique: true,
     },
-    userName: {
+    likeNickname: {
         type: String,
     },
     title: {
@@ -25,4 +25,4 @@ const postsSchema = new Schema({
         type: String,
     },
 })
-module.exports = mongoose.model('posts', postsSchema)
+module.exports = mongoose.model('like', likeSchema)

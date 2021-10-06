@@ -48,18 +48,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"></script>
         <link href="../static/mystyle.css" rel="stylesheet" />
-        <script src="../public/static/api.js"></script>
+        <script src="../static/api.js"></script>
         <title>게시판</title>
         <script>
             $(document).ready(function () {
+                getSelfNoAuth(function (u) {
+                    user = u
+                })
                 get_posts()
+                setTimeout(function () {
+                    makeLogoutButton()
+                }, 1000)
             })
-            let user
-            getSelf(function (u) {
-                user = u
-                console.log(user)
-            })
-            console.log(user)
+
             function get_posts() {
                 $('#postsList tbody').empty()
 
@@ -114,6 +115,7 @@
             <button
                 type="button"
                 class="btn btn-outline-sparta"
+                id="signOutButton"
                 onclick="signOut()"
             >
                 로그아웃하기

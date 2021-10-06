@@ -1,17 +1,17 @@
-const socket = io.connect('/')
+// const socket = io.connect('/')
 
-socket.on('BUY_GOODS', function (data) {
-    const { nickname, goodsId, goodsName, date } = data
-    makeBuyNotification(nickname, goodsName, goodsId, date)
-})
+// socket.on('BUY_GOODS', function (data) {
+//     const { nickname, goodsId, goodsName, date } = data
+//     makeBuyNotification(nickname, goodsName, goodsId, date)
+// })
 
-function initAuthenticatePage() {
-    socket.emit('CHANGED_PAGE', `${location.pathname}${location.search}`)
-}
+// function initAuthenticatePage() {
+//     socket.emit('CHANGED_PAGE', `${location.pathname}${location.search}`)
+// }
 
-function bindSamePageViewerCountEvent(callback) {
-    socket.on('SAME_PAGE_VIEWER_COUNT', callback)
-}
+// function bindSamePageViewerCountEvent(callback) {
+//     socket.on('SAME_PAGE_VIEWER_COUNT', callback)
+// }
 
 function postOrder(user, order) {
     if (!order.length) {
@@ -28,7 +28,61 @@ function postOrder(user, order) {
     })
 }
 
+function makeLogoutButton() {
+    try {
+        if (user.nickname) {
+        }
+    } catch (err) {
+        let loginButtonHtml = `<button
+                                    type="button"
+                                    class="btn btn-outline-sparta"
+                                    id="homeButton"
+                                    onclick="signOut()"
+                                >
+                                    로그인하기
+                                </button>`
+        $('#signOutButton').replaceWith(loginButtonHtml)
+    }
+}
+
+function changeLogoutButton() {
+    try {
+        if (user.nickname) {
+            let signOutButtonHTML = `<button
+                                    type="button"
+                                    class="btn btn-outline-sparta"
+                                    id="signOutButton"
+                                    onclick="signOut()"
+                                >
+                                    로그아웃하기
+                                </button>`
+            $('#homeButton').replaceWith(signOutButtonHTML)
+        }
+    } catch (err) {}
+}
+
 function getSelf(callback) {
+    $.ajax({
+        type: 'GET',
+        url: '/api/users/me',
+        headers: {
+            authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        success: function (response) {
+            callback(response.user)
+        },
+        error: function (status, error) {
+            if (status == 401) {
+                alert('로그인이 필요합니다.')
+            } else {
+                localStorage.clear()
+                alert('로그인 후 이용하세요.')
+            }
+            window.location.href = '/'
+        },
+    })
+}
+function getSelfNoAuth(callback) {
     $.ajax({
         type: 'GET',
         url: '/api/users/me',
@@ -43,23 +97,8 @@ function getSelf(callback) {
                 alert('로그인이 필요합니다.')
             } else {
                 localStorage.clear()
-                alert('알 수 없는 문제가 발생했습니다. 관리자에게 문의하세요.')
+                alert('손님이시군요! 손님은 기능에 제한이 있을 수 있습니다.')
             }
-            window.location.href = '/'
-        },
-    })
-}
-
-function getGoods(category, callback) {
-    $('#goodsList').empty()
-    $.ajax({
-        type: 'GET',
-        url: `/api/goods${category ? '?category=' + category : ''}`,
-        headers: {
-            authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        success: function (response) {
-            callback(response['goods'])
         },
     })
 }

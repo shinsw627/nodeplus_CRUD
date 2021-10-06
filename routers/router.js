@@ -5,7 +5,6 @@ const Comments = require('../models/comment')
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const Joi = require('joi')
 const authMiddleware = require('../middlewares/auth-middleware')
 const app = express()
 app.use(express.urlencoded({ extended: false }))
@@ -46,17 +45,18 @@ router.post('/users', async (req, res) => {
         }
         const nick_check = /^[a-zA-Z가-힣]+[a-zA-z가-힣0-9]{3,7}$/g
         const eng_check = /^[a-zA-Z]+[a-z0-9]{2,15}$/g
-        const pw_check = /^[a-zA-Z]+[a-z0-9]{3,19}$/g
+        const pw_check = /^[a-zA-Z]+[a-z0-9~!@#$%^&*()_+<>?:{}]{3,15}$/g
         const email_check =
             /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i
 
         const id = email.split('@')[0]
 
         const regex = new RegExp(id)
+        const regexnick = new RegExp(nickname)
         if (!nick_check.test(nickname)) {
             res.status(400).send({
                 errorMessage:
-                    '닉네임은 한글,영어로 시작하는 숫자를 이용한 4~8자여야만합니다.',
+                    '닉네임은 한글,영어로 시작하는 숫자를 이용한 4~16자여야만합니다.',
             })
             return
         }
@@ -76,13 +76,13 @@ router.post('/users', async (req, res) => {
         if (!pw_check.test(password)) {
             res.status(400).send({
                 errorMessage:
-                    '비밀번호는 영문자로 시작하는 4~20자여야만 합니다.',
+                    '비밀번호는 영문자로 시작하며 4~20자여야만 합니다.',
             })
             return
-        } else if (regex.test(password)) {
+        } else if (regex.test(password) || regexnick.test(password)) {
             res.status(400).send({
                 errorMessage:
-                    '패스워드에 아이디와 같은 값을 사용할 수 없습니다.',
+                    '패스워드에 아이디나 닉네임과 같은 값을 사용할 수 없습니다.',
             })
             return
         }
@@ -166,7 +166,6 @@ router.post('/write', async (req, res) => {
 
 //글 수정 PATCH
 router.patch('/posts/:postId', async (req, res) => {
-    console.log(req.params)
     const { postId } = req.params
     const { title, content } = req.body
     const loadpost = await Posts.find({ postId })
@@ -193,6 +192,31 @@ router.post('/writecomments', async (req, res) => {
     const { postId, commentId, nickname, content, date } = req.body
     await Comments.create({ postId, commentId, nickname, content, date })
 
+    res.send({ result: 'success' })
+})
+
+//댓글삭제
+router.delete('/comments/:postId', async (req, res) => {
+    const { commentId } = req.body
+    const deleteComment = await Comments.findOne({ commentId: commentId })
+    console.log(deleteComment)
+    if (deleteComment != undefined) {
+        await Comments.deleteOne({ commentId })
+    } else {
+        res.status(401).send({ result: 'error' })
+        return
+    }
+    res.send({ result: 'success' })
+})
+
+//댓글 수정
+router.patch('/comments/:postId', async (req, res) => {
+    const { content, commentId } = req.body
+    const loadcontent = await Comments.find({ commentId })
+
+    if (loadcontent.length > 0) {
+        await Comments.updateOne({ commentId }, { $set: { content } })
+    }
     res.send({ result: 'success' })
 })
 

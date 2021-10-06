@@ -47,52 +47,30 @@
         ></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"></script>
-        <script src="../public/static/api.js"></script>
+        <script src="../static/api.js"></script>
         <link href="../static/mystyle.css" rel="stylesheet" />
         <title>게시판</title>
         <script>
             const queryString = window.location.search
             const urlParams = new URLSearchParams(queryString)
             const postId = urlParams.get('postId')
+            let deleteCommentId
             let user
             let tokenEmail
             let tokenName
             let wPostId
-            function getSelf(callback) {
-                $.ajax({
-                    type: 'GET',
-                    url: '/api/users/me',
-                    headers: {
-                        authorization: `Bearer ${localStorage.getItem(
-                            'token'
-                        )}`,
-                    },
-                    success: function (response) {
-                        callback(response.user)
-                    },
-                    error: function (xhr, status, error) {
-                        if (status == 401) {
-                            alert('로그인이 필요합니다.')
-                        } else {
-                            localStorage.clear()
-                            alert(
-                                '알 수 없는 문제가 발생했습니다. 관리자에게 문의하세요.'
-                            )
-                        }
-                        window.location.href = '/'
-                    },
-                })
-            }
             $(document).ready(function () {
-                getSelf(function (u) {
+                getSelfNoAuth(function (u) {
                     user = u
-                    tokenEmail = user.email
-                    tokenName = user.nickname
                 })
-
-                get_detail(tokenName)
+                get_detail()
+                setTimeout(function () {
+                    makeLogoutButton()
+                }, 1000)
+                
+                
             })
-
+            
             function get_detail() {
                 $.ajax({
                     type: 'GET',
@@ -123,10 +101,10 @@
                                         <div class="buttoncontrol">
                                         <div class="invisiblebuttoncontrol"></div>
                                         <button class="button is-black" onclick="location.href='/rewrite?postId=${postDetail['postId']}'">수정하기</button>
-                                        <button class="button is-black" onclick="openModal(${chkPw})">삭제하기</button>
+                                        <button class="button is-black" onclick="openPostModal(${chkPw})">삭제하기</button>
                                         </div>`
 
-                        let modalHtml = `<div class="modal">
+                        let modalHtml = `<div class="modal" id="postModal">
                                             <div class="modal-background"></div>
                                             <div class="modal-content">
                                               <h3>비밀번호를 입력하세요</h3>
@@ -134,10 +112,11 @@
                                               <div class="buttoncontrol2">
                                               <div class="invisiblebuttoncontrol2"></div>
                                               <button class="button is-black a" onclick="deletePost(${chkPw})">삭제하기</button>
-                                              <button class="button is-black a" onclick="closeModal()">닫기</button>
+                                              <button class="button is-black a" onclick="closePostModal()">닫기</button>
                                               </div>
                                             </div>
-                                        </div>`
+                                        </div>
+                                        `
 
                         let commentButtonHtml = `<button class="button is-info" style="display: block; margin : 20px 80%;" onclick="writeComment(${postDetail.postId})">댓글저장</button>`
 
@@ -146,10 +125,13 @@
                         $('#commentbuttonarea').append(commentButtonHtml)
                         $('body').append(modalHtml)
 
-                        let commentDetail
                         for (let i = 0; i < response.comments.length; i++) {
-                            commentDetail = response['comments'][i]
-                            let commentHtml = `<div class="box">
+                            let commentDetail = response['comments'][i]
+                            let commentDetailNick = commentDetail.nickname
+                            let commentDetailId = commentDetail.commentId
+                            try {
+                                if (commentDetail.nickname == user.nickname) {
+                                    let commentHtml = `<div class="box" style="max-height: 300px;">
                                             <article class="media">
                                                 <div class="media-left">
                                                 <figure class="image is-64x64">
@@ -157,39 +139,160 @@
                                                 </figure>
                                                 </div>
                                                 <div class="media-content">
-                                                <div class="content">
-                                                    <p>
+                                                <div class="content" id="content-${commentDetailId}">
+                                                    <h4>
                                                     <strong>${commentDetail.nickname}</strong> <small>${commentDetail.date}</small>
-                                                    <br>
-                                                    ${commentDetail.content}
-                                                    </p>
+                                                    </h4>
+                                                    <p id="comment-${commentDetailId}">${commentDetail.content}</p>
                                                 </div>
                                                 <nav class="level is-mobile">
-                                                    <div class="level-left">
-                                                    <a class="level-item" aria-label="reply">
-                                                        <span class="icon is-small">
-                                                        <i class="fas fa-reply" aria-hidden="true"></i>
-                                                        </span>
+                                                    <div class="level-left" id="commentButtonArea-${commentDetailId}" style="max-height: 200px;">
+                                                    <a class="level-item" aria-label="retweet" id="commentUpdateButton-${commentDetailId}" onclick="commentTransformUpdate(${commentDetailId})">
+                                                        <span class="tag is-link is-light">수정</span>
                                                     </a>
-                                                    <a class="level-item" aria-label="retweet">
-                                                        <span class="icon is-small">
-                                                        <i class="fas fa-retweet" aria-hidden="true"></i>
-                                                        </span>
-                                                    </a>
-                                                    <a class="level-item" aria-label="like">
-                                                        <span class="icon is-small">
-                                                        <i class="fas fa-heart" aria-hidden="true"></i>
-                                                        </span>
+                                                    <a class="level-item" aria-label="like" id="commentDeleteButton-${commentDetailId}" onclick="openCommentModal(${commentDetailId})">
+                                                        <span class="tag is-danger is-light">삭제</span>
                                                     </a>
                                                     </div>
                                                 </nav>
                                                 </div>
                                             </article>
                                             </div>`
-                            $('#commentload').append(commentHtml)
+                                    $('#commentload').append(commentHtml)
+                                } else {
+                                    let commentHtml = `<div class="box"style="max-height: 300px;">
+                                            <article class="media">
+                                                <div class="media-left">
+                                                <figure class="image is-64x64">
+                                                    <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image">
+                                                </figure>
+                                                </div>
+                                                <div class="media-content" style="max-height: 200px;">
+                                                <div class="content">
+                                                    <h4>
+                                                    <strong>${commentDetail.nickname}</strong> <small>${commentDetail.date}</small>
+                                                    </h4>
+                                                    <p id="comment-${commentDetailId}">${commentDetail.content}</p>
+                                                </div>
+                                                <nav class="level is-mobile">
+                                                    <div class="level-left" id="commentButtonArea-${commentDetailId}">
+                                                    </div>
+                                                </nav>
+                                                </div>
+                                            </article>
+                                            </div>`
+                                    $('#commentload').append(commentHtml)
+                                }
+                            } catch {
+                                let commentHtml = `<div class="box" style="max-height: 300px;">
+                                            <article class="media">
+                                                <div class="media-left">
+                                                <figure class="image is-64x64">
+                                                    <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image">
+                                                </figure>
+                                                </div>
+                                                <div class="media-content">
+                                                <div class="content" id="content-${commentDetailId}">
+                                                    <h4>
+                                                    <strong>${commentDetail.nickname}</strong> <small>${commentDetail.date}</small>
+                                                    </h4>
+                                                    <p id="comment-${commentDetailId}">${commentDetail.content}</p>
+                                                </div>
+                                                <nav class="level is-mobile">
+                                                    <div class="level-left" id="commentButtonArea-${commentDetailId}" style="max-height: 200px;">
+                                                    
+                                                    </div>
+                                                </nav>
+                                                </div>
+                                            </article>
+                                            </div>`
+                                $('#commentload').append(commentHtml)
+                            }
                         }
                     },
                 })
+            }
+            function testAuth(callback){
+
+            }
+            function deleteComment(id) {
+                const commentId = id
+                $.ajax({
+                    type: 'DELETE',
+                    url: `/api/comments/${postId}`,
+                    data: {
+                        commentId: commentId,
+                    },
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            alert('삭제 완료')
+                            location.href = `/detail?postId=${postId}`
+                        }
+                    },
+                    error: function (response) {
+                        if (response['result'] == 'error') {
+                            alert('삭제 실패')
+                        }
+                    },
+                })
+            }
+            //수정하는 댓글형태로 바꾼다.
+            function commentTransformUpdate(id) {
+                $(`#content-${id}`).remove('h4')
+                $(`#comment-${id}`)
+                    .contents()
+                    .unwrap()
+                    .wrap(
+                        `<textarea class="textarea is-info" placeholder="Info textarea" id="commentInput-${id}" style="max-height: 130px;"></textarea>`
+                    )
+                $(`#commentUpdateButton-${id}`).remove()
+                $(`#commentDeleteButton-${id}`).remove()
+                $(`#commentButtonArea-${id}`).append(`
+                                                    <a class="level-item" aria-label="like" id="commentDeleteButton-${id}" onclick="updateComment(${id})">
+                                                        <span class="tag is-danger is-light">수정</span>
+                                                    </a>
+                                                    <a class="level-item" aria-label="retweet" id="commentUpdateButton-${id}" onclick="commentTransformSelect(${id})">
+                                                        <span class="tag is-link is-light">취소</span>
+                                                    </a>`)
+            }
+            //조회하는 댓글형태로 돌아온다
+            function commentTransformSelect(id) {
+                $(`#commentInput-${id}`)
+                    .contents()
+                    .unwrap()
+                    .wrap(`<p id="comment-${id}"></p>`)
+                $(`#commentUpdateButton-${id}`).remove()
+                $(`#commentDeleteButton-${id}`).remove()
+                $(`#commentButtonArea-${id}`)
+                    .append(`<a class="level-item" aria-label="retweet" id="commentUpdateButton-${id}" onclick="commentTransformUpdate(${id})">
+                                                        <span class="tag is-link is-light">수정</span>
+                                                    </a>
+                                                    <a class="level-item" aria-label="like" id="commentDeleteButton-${id}" onclick="openCommentModal()">
+                                                        <span class="tag is-danger is-light">삭제</span>
+                                                    </a> `)
+            }
+            function updateComment(id) {
+                const content = $(`#commentInput-${id}`).val()
+                const commentId = id
+                if (content == ('' || undefined)) {
+                    alert('댓글 내용을 입력해주세요')
+                    return
+                } else {
+                    $.ajax({
+                        type: 'PATCH',
+                        url: `/api/comments/${postId}`,
+                        data: {
+                            content: content,
+                            commentId: id,
+                        },
+                        success: function (response) {
+                            if (response['result'] == 'success') {
+                                alert('수정 완료')
+                                location.href = `/detail?postId=${postId}`
+                            }
+                        },
+                    })
+                }
             }
 
             function updatePost(chkPw) {
@@ -234,17 +337,42 @@
                 }
             }
 
-            function openModal(chkPw) {
-                const modal = document.querySelector('.modal')
+            function openPostModal(chkPw) {
+                const modal = document.querySelector('#postModal')
                 modal.style.display = 'flex'
             }
-            function closeModal() {
-                const modal = document.querySelector('.modal')
+            function closePostModal() {
+                const modal = document.querySelector('#postModal')
                 modal.style.display = 'none'
+            }
+            function openCommentModal(id) {
+                deleteCommentId = id
+                let commentModalHtml = `<div class="modal" id="commentModal">
+                                            <div class="modal-background"></div>
+                                            <div class="modal-content">
+                                              <div class="buttoncontrol2">
+                                              <div class="invisiblebuttoncontrol2"></div>
+                                              <button class="button is-black a" onclick="deleteComment(${deleteCommentId})">댓글삭제</button>
+                                              <button class="button is-black a" onclick="closeCommentModal()">닫기</button>
+                                              </div>
+                                            </div>
+                                        </div>`
+
+                $('body').append(commentModalHtml)
+                const modal = document.querySelector('#commentModal')
+                modal.style.display = 'flex'
+            }
+            function closeCommentModal() {
+                const modal = document.querySelector('#commentModal')
+                modal.style.display = 'none'
+                deleteCommentId = ''
+                $(`#commentModal`).remove()
             }
 
             function deletePost(chkPw) {
-                const contentPw = parseInt($('#deletePw').val())
+                try{
+                    const contentPw = parseInt($('#deletePw').val())
+                    const nickName = user.nickname
                 if (contentPw != chkPw) {
                     alert('패스워드를 확인하세요')
                     return
@@ -261,10 +389,15 @@
                         },
                     })
                 }
+                }catch(err){
+                    alert('로그인 후 이용하세요')
+                    location.href = `/detail?postId=${postId}`
+                }
             }
 
             function writeComment(id) {
-                const postId = id
+                try{
+                    const postId = id
                 const commentId = Date.now()
                 const content = $('#commentContent').val()
                 const nickname = user.nickname
@@ -290,11 +423,16 @@
                         success: function (response) {
                             if (response['result'] == 'success') {
                                 alert('저장 완료')
-                                location.href = `/detail?postId=${wPostId}`
+                                location.href = `/detail?postId=${postId}`
                             }
                         },
                     })
                 }
+                }catch(err){
+                    alert('로그인 후 이용하세요')
+                    location.href = `/detail?postId=${postId}`
+                }
+                
             }
         </script>
     </head>
@@ -313,6 +451,7 @@
             <button
                 type="button"
                 class="btn btn-outline-sparta"
+                id="signOutButton"
                 onclick="signOut()"
             >
                 로그아웃하기
@@ -321,6 +460,7 @@
         <div class="postbar" id="postload"></div>
         <div class="commentbar">
             <div class="control" id="commentarea">
+                <label class="label">댓글작성하기</label>
                 <textarea
                     class="textarea is-focused"
                     id="commentContent"
@@ -342,41 +482,16 @@
                         <div class="media-content">
                             <div class="content">
                                 <p>
-                                    <strong>John Smith</strong>
-                                    <small>@johnsmith</small> <small>31m</small>
+                                    <strong>준비중...</strong>
+                                    <small>경고창 빨리클릭하세요!</small>
+                                    <small>31m</small>
                                     <br />
-                                    Lorem ipsum dolor sit amet, consectetur
-                                    adipiscing elit. Aenean efficitur sit amet
-                                    massa fringilla egestas. Nullam condimentum
-                                    luctus turpis.
+                                    댓글 불러올 준비 중...... ^^
                                 </p>
                             </div>
                             <nav class="level is-mobile">
                                 <div class="level-left">
                                     <a class="level-item" aria-label="reply">
-                                        <span class="icon is-small">
-                                            <i
-                                                class="fas fa-reply"
-                                                aria-hidden="true"
-                                            ></i>
-                                        </span>
-                                    </a>
-                                    <a class="level-item" aria-label="retweet">
-                                        <span class="icon is-small">
-                                            <i
-                                                class="fas fa-retweet"
-                                                aria-hidden="true"
-                                            ></i>
-                                        </span>
-                                    </a>
-                                    <a class="level-item" aria-label="like">
-                                        <span class="icon is-small">
-                                            <i
-                                                class="fas fa-heart"
-                                                aria-hidden="true"
-                                            ></i>
-                                        </span>
-                                    </a>
                                 </div>
                             </nav>
                         </div>

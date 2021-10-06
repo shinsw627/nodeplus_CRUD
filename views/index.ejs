@@ -22,7 +22,7 @@
             rel="stylesheet"
         />
         <link href="../static/mystyle.css" rel="stylesheet" />
-        <title>스파르타 쇼핑몰 | 로그인</title>
+        <title>게시판</title>
 
         <style>
             .jumbotron {
@@ -43,7 +43,7 @@
     <body>
         <div
             class="jumbotron bg-sparta text-black text-center"
-            onclick="window.location.href='/'"
+            onclick="window.location.href='/board'"
         >
             <h1 class="font-weight-bold">게시판</h1>
         </div>
@@ -59,7 +59,7 @@
                         <input
                             type="text"
                             class="form-control"
-                            placeholder="아이디"
+                            placeholder="이메일"
                             aria-label="Username"
                             aria-describedby="basic-addon1"
                             id="inputEmail"
@@ -156,7 +156,7 @@
             crossorigin="anonymous"
         ></script>
 
-        <script src="../public/static/api.js"></script>
+        <script src="../static/api.js"></script>
 
         <script>
             function getSelf(callback) {
@@ -186,9 +186,7 @@
             }
             if (localStorage.getItem('token')) {
                 getSelf(function () {
-                    alert(
-                        '이미 로그인이 되어있습니다. 상품 페이지로 이동합니다.'
-                    )
+                    alert('이미 로그인이 되어있습니다. 게시판으로 이동합니다.')
                     window.location.replace('/board')
                 })
             }

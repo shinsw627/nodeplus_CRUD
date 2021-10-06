@@ -49,7 +49,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.4.0/socket.io.js"></script>
 
         <link href="../static/mystyle.css" rel="stylesheet" />
-        <script src="../public/static/api.js"></script>
+        <script src="../static/api.js"></script>
         <title>글쓰기</title>
         <script>
             function getSelf(callback) {
@@ -69,9 +69,7 @@
                             alert('로그인이 필요합니다.')
                         } else {
                             localStorage.clear()
-                            alert(
-                                '알 수 없는 문제가 발생했습니다. 관리자에게 문의하세요.'
-                            )
+                            alert('로그인 후 이용하세요.')
                         }
                         window.location.href = '/'
                     },
@@ -86,7 +84,7 @@
             //글쓰기
             function write_post() {
                 const postId = Date.now()
-                const userName = $('#postUsername').val()
+                const userName = user.nickname
                 const title = $('#postTitle').val()
                 const content = $('#postContent').val()
                 const contentPw = parseInt($('#postPw').val())
@@ -116,7 +114,7 @@
                         url: `/api/write`,
                         data: {
                             postId: postId,
-                            nickname: user.nickname,
+                            nickname: userName,
                             title: title,
                             content: content,
                             contentPw: contentPw,
@@ -125,7 +123,7 @@
                         success: function (response) {
                             if (response['result'] == 'success') {
                                 alert('저장 완료')
-                                location.href = '/'
+                                location.href = '/board'
                             }
                         },
                     })
@@ -173,13 +171,6 @@
                         max="9999"
                         maxlength="4"
                         placeholder="비밀번호 숫자만4자리"
-                    />
-                    <label class="label">작성자</label
-                    ><input
-                        class="input is-success"
-                        id="postUsername"
-                        type="text"
-                        placeholder="작성자 입력칸 입니다."
                     />
                 </div>
                 <label class="label">내용</label>
