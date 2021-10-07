@@ -108,29 +108,6 @@ function signOut() {
     window.location.href = '/'
 }
 
-function getGoodsDetail(goodsId, callback) {
-    $.ajax({
-        type: 'GET',
-        url: `/api/goods/${goodsId}`,
-        headers: {
-            authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        error: function (xhr, status, error) {
-            if (status == 401) {
-                alert('로그인이 필요합니다.')
-            } else if (status == 404) {
-                alert('존재하지 않는 상품입니다.')
-            } else {
-                alert('알 수 없는 문제가 발생했습니다. 관리자에게 문의하세요.')
-            }
-            window.location.href = '/goods'
-        },
-        success: function (response) {
-            callback(response.goods)
-        },
-    })
-}
-
 function makeBuyNotification(targetNickname, goodsName, goodsId, date) {
     const messageHtml = `${targetNickname}님이 방금 <a href="/detail.html?goodsId=${goodsId}" class="alert-link">${goodsName}</a>을 구매했어요! <br /><small>(${date})</small>
     <button type="button" class="close" data-dismiss="alert" aria-label="Close">

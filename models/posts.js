@@ -10,6 +10,9 @@ const postsSchema = new Schema({
     nickname: {
         type: String,
     },
+    likeNicknames: {
+        type: Array,
+    },
     title: {
         type: String,
         required: true,

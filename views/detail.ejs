@@ -24,6 +24,10 @@
             crossorigin="anonymous"
         />
         <!-- Font Awesome CSS -->
+        <script
+            src="https://kit.fontawesome.com/6584921572.js"
+            crossorigin="anonymous"
+        ></script>
         <link
             href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
             rel="stylesheet"
@@ -64,14 +68,69 @@
                     user = u
                 })
                 get_detail()
+                setTimeout(function() {
+                    try{
+                        if(user.nickname){}
+                        makeLikeButton()
+                    }catch(err){
+                        nologinLikeCount()
+                    }
+                }, 100)
+                
+                
                 setTimeout(function () {
                     makeLogoutButton()
-                }, 1000)
+                }, 100)
                 
                 
             })
+            function makeLikeButton(){
+                let nickinfo = user.nickname
+                $.ajax({
+                    type: 'PATCH',
+                    url: `/api/post/chklikes/${postId}`,
+                    data: {
+                        nickname: nickinfo,
+                    },
+                    success: function (response) {
+                        let likestate = response.likestate
+                        let likecount = response.likecount
+                        if(likestate){
+                            $('#likeButton').remove()
+                            $('#likeLabel').remove()
+                            let likeHtml = `<label class="label" id="likeLabel">좋아요 ${likecount}개 </label><i class="fas fa-heart" id="likedButton" onclick="updateLike()"></i>
+                                            `
+                            $('#likeButtonArea').append(likeHtml)
+                        } else { 
+                            $('#likeButton').remove()
+                            $('#likeLabel').remove()
+                            let likeHtml = `<label class="label" id="likeLabel">좋아요 ${likecount}개</label><i class="far fa-heart" id="likedButton" onclick="updateLike()"></i>`
+                            $('#likeButtonArea').append(likeHtml)
+                        }
+                        console.log(likestate)
+                    }
+                }) 
+            }
+            function nologinLikeCount(){
+                $.ajax({
+                    type: 'GET',
+                    url: `/api/post/nologinchklikes/${postId}`,
+                    data: {},
+                    success: function (response) {
+                        let likecount = response.likecount
+                        
+                            $('#likeButton').remove()
+                            $('#likeLabel').remove()
+                            let likeHtml = `<label class="label" id="likeLabel">좋아요 ${likecount}개 </label><i class="far fa-heart" id="likedButton" onclick="updateLike()"></i>
+                                            `
+                            $('#likeButtonArea').append(likeHtml)
+                        
+                    }
+                }) 
+            }
             
             function get_detail() {
+               
                 $.ajax({
                     type: 'GET',
                     url: `/api/posts/${postId}`,
@@ -87,7 +146,10 @@
                         $('#postload').empty()
                         $('#commentload').empty()
                         let postDetail = response['posts']
+                        let postNickname = postDetail.nickname
                         let chkPw = postDetail['contentPw']
+                        let likestate = response.likestate
+                        let likecount = response.likecount
                         wPostId = postDetail.postId
 
                         let htmlTemp = `<article class="message is-dark">
@@ -100,8 +162,8 @@
                                         </article>
                                         <div class="buttoncontrol">
                                         <div class="invisiblebuttoncontrol"></div>
-                                        <button class="button is-black" onclick="location.href='/rewrite?postId=${postDetail['postId']}'">수정하기</button>
-                                        <button class="button is-black" onclick="openPostModal(${chkPw})">삭제하기</button>
+                                        <button class="button is-black" onclick="checkAuthRewrite('${postNickname}')">수정하기</button>
+                                        <button class="button is-black" onclick="openPostModal(${chkPw},'${postNickname}')">삭제하기</button>
                                         </div>`
 
                         let modalHtml = `<div class="modal" id="postModal">
@@ -209,12 +271,28 @@
                                 $('#commentload').append(commentHtml)
                             }
                         }
+                        
                     },
                 })
+                
+                
             }
-            function testAuth(callback){
 
+           
+
+            function checkAuthRewrite(postNickname){
+                try{
+                    if(postNickname == user.nickname){
+                        location.href=`/rewrite?postId=${postId}`
+                    }else {
+                        alert('자신이 쓴 글만 수정 가능합니다!')
+                    }
+                }catch(err) {
+                    alert('로그인 후 이용하세요')
+                    location.href=`/detail?postId=${postId}`
+                }
             }
+
             function deleteComment(id) {
                 const commentId = id
                 $.ajax({
@@ -270,6 +348,32 @@
                                                     <a class="level-item" aria-label="like" id="commentDeleteButton-${id}" onclick="openCommentModal()">
                                                         <span class="tag is-danger is-light">삭제</span>
                                                     </a> `)
+            }
+            
+            function updateLike(){
+                try{
+                    
+                    if(user.nickname){
+                        $.ajax({
+                        type: 'PATCH',
+                        url: `/api/post/likes/${postId}`,
+                        data: {
+                            nickname: user.nickname,
+                        },
+                        success: function (response) {
+                            if (response['result'] == 'success') {
+                                alert('좋아요 반영')
+
+                                
+                                location.href = `/detail?postId=${postId}`
+                            }
+                        },
+                    })
+                    }
+                }catch(err) {
+                    alert('로그인 후 이용하세요')
+                    location.href=`/detail?postId=${postId}`
+                }
             }
             function updateComment(id) {
                 const content = $(`#commentInput-${id}`).val()
@@ -337,9 +441,20 @@
                 }
             }
 
-            function openPostModal(chkPw) {
+            function openPostModal(chkPw, postNickname) {
                 const modal = document.querySelector('#postModal')
-                modal.style.display = 'flex'
+                try{
+                    if(postNickname == user.nickname){
+                        modal.style.display = 'flex'
+                    }else {
+                        alert('자신이 쓴 글만 삭제 가능합니다!')
+                    }
+                }catch(err) {
+                    alert('로그인 후 이용하세요')
+                    location.href=`/detail?postId=${postId}`
+                }
+                
+                
             }
             function closePostModal() {
                 const modal = document.querySelector('#postModal')
@@ -458,6 +573,7 @@
             </button>
         </nav>
         <div class="postbar" id="postload"></div>
+        <div id='likeButtonArea'><label class="label" id="likeLabel">좋아요 </label><i class="far fa-heart" id="likeButton" onclick="updateLike()"></i></div>
         <div class="commentbar">
             <div class="control" id="commentarea">
                 <label class="label">댓글작성하기</label>
@@ -486,7 +602,7 @@
                                     <small>경고창 빨리클릭하세요!</small>
                                     <small>31m</small>
                                     <br />
-                                    댓글 불러올 준비 중...... ^^
+                                    댓글 불러올 준비 중......
                                 </p>
                             </div>
                             <nav class="level is-mobile">

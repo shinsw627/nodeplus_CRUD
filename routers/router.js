@@ -6,6 +6,7 @@ const router = express.Router()
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const authMiddleware = require('../middlewares/auth-middleware')
+const posts = require('../models/posts')
 const app = express()
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
@@ -151,9 +152,23 @@ router.get('/posts', async (req, res, next) => {
 //글 상세 조회
 router.get('/posts/:postId', async (req, res) => {
     const { postId } = req.params
-    posts = await Posts.findOne({ postId: postId })
-    comments = await Comments.find({ postId: postId }).sort('-postId')
-    res.json({ posts: posts, comments: comments })
+    const posts = await Posts.findOne({ postId: postId })
+    const comments = await Comments.find({ postId: postId }).sort('-postId')
+    const postdata = await Posts.findOne({ postId })
+    const likeNicknames = postdata.likeNicknames
+    let likestate = false
+    const likecount = likeNicknames.length
+    for (let i = 0; i < likeNicknames.length; i++) {
+        if (likeNicknames[i] == posts.nickname) {
+            likestate = true
+            break
+        }
+    }
+
+    res.json({
+        posts: posts,
+        comments: comments,
+    })
 })
 
 //글 작성
@@ -220,4 +235,55 @@ router.patch('/comments/:postId', async (req, res) => {
     res.send({ result: 'success' })
 })
 
+//글 좋아요
+router.patch('/post/likes/:postId', async (req, res) => {
+    const { postId } = req.params
+    const { nickname } = req.body
+    const postdata = await Posts.findOne({ postId })
+    const likeNicknames = postdata.likeNicknames
+    let likestate = false
+
+    for (let i = 0; i < likeNicknames.length; i++) {
+        if (likeNicknames[i] == nickname) {
+            likestate = true
+            break
+        }
+    }
+    if (likestate) {
+        await Posts.updateOne(
+            { postId: postId },
+            { $pull: { likeNicknames: nickname } }
+        )
+    } else {
+        await Posts.updateOne(
+            { postId: postId },
+            { $push: { likeNicknames: nickname } }
+        )
+    }
+    res.send({ result: 'success' })
+})
+router.patch('/post/chklikes/:postId', async (req, res) => {
+    const { postId } = req.params
+    const { nickname } = req.body
+    const postdata = await Posts.findOne({ postId })
+    const likeNicknames = postdata.likeNicknames
+    let likestate = false
+    let likecount = likeNicknames.length
+    console.log(nickname)
+    for (let i = 0; i < likeNicknames.length; i++) {
+        if (likeNicknames[i] == nickname) {
+            likestate = true
+        }
+    }
+
+    res.send({ result: 'success', likestate: likestate, likecount: likecount })
+})
+router.get('/post/nologinchklikes/:postId', async (req, res) => {
+    const { postId } = req.params
+    const postdata = await Posts.findOne({ postId })
+    const likeNicknames = postdata.likeNicknames
+    let likecount = likeNicknames.length
+
+    res.send({ result: 'success', likecount: likecount })
+})
 module.exports = router

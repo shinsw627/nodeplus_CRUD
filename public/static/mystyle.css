@@ -151,3 +151,7 @@ body {
     max-width: 800px;
     margin: auto;
 }
+#likeButtonArea {
+    margin: auto;
+    text-align: center;
+}

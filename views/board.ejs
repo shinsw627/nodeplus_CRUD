@@ -24,6 +24,10 @@
             crossorigin="anonymous"
         />
         <!-- Font Awesome CSS -->
+        <script
+            src="https://kit.fontawesome.com/6584921572.js"
+            crossorigin="anonymous"
+        ></script>
         <link
             href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
             rel="stylesheet"
@@ -71,13 +75,15 @@
                     success: function (response) {
                         let posts = response['posts']
                         console.log(posts)
+                        let likecount = []
                         for (let i = 0; i < posts.length; i++) {
-                            make_list(posts[i], i + 1)
+                            likecount = posts[i].likeNicknames.length
+                            make_list(posts[i], likecount)
                         }
                     },
                 })
             }
-            function make_list(item, i) {
+            function make_list(item, likecount) {
                 if (item['nickname'] === ('' || undefined)) {
                     item['nickname'] = 'Guest'
                 }
@@ -85,7 +91,7 @@
                 let previewContent = item['content'].substring(0, 25)
 
                 let htmlTemp = `<tr>
-                                <th scope="row">${i}</th>
+                                <th scope="row" style="text-align: center;">${likecount}</th>
                                 <td>${item['nickname']}</td>
                                 <td><a style="color :#007bff;" onclick="location.href='/detail?postId=${item['postId']}'">${pretitle}</a></td>
                                 <td><a style="color :#007bff;" onclick="location.href='/detail?postId=${item['postId']}'">${previewContent}...</a></td>
@@ -125,7 +131,7 @@
             <table class="table" id="postsList">
                 <thead>
                     <tr>
-                        <th scope="col">번호</th>
+                        <th scope="col">좋아요</th>
                         <th scope="col">작성자</th>
                         <th scope="col">제목</th>
                         <th scope="col">내용</th>
