@@ -198,6 +198,7 @@ router.delete('/posts/:postId', async (req, res) => {
     const deletePost = await Posts.find({ postId })
     if (deletePost.length > 0) {
         await Posts.deleteOne({ postId })
+        await Comments.deleteMany({ postId })
     }
     res.send({ result: 'success' })
 })

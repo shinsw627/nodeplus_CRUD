@@ -279,7 +279,7 @@
             }
 
            
-
+// 인증부분 미들웨어를 사용하면 된다는 걸 너무 늦게 깨달았다...
             function checkAuthRewrite(postNickname){
                 try{
                     if(postNickname == user.nickname){
@@ -555,6 +555,7 @@
         <!-- Just an image -->
         <nav class="navbar navbar-light bg-light">
             <a href="/board"><h5 class="navtitle">게시판</h5></a>
+            <a href="/chat"><h3 class="navtitle">채팅방</h3></a>
             <a class="navbar-brand" href="/">
                 <img
                     src="https://i.pinimg.com/564x/b5/70/d8/b570d831b240df6c033a4e2f8d2b7740.jpg"

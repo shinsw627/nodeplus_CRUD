@@ -12,7 +12,51 @@
 // function bindSamePageViewerCountEvent(callback) {
 //     socket.on('SAME_PAGE_VIEWER_COUNT', callback)
 // }
+// message.toString()
+const messageList = document.querySelector('ul')
+const messageForm = document.querySelector('#message')
 
+const socket = new WebSocket(`ws://${window.location.host}`)
+
+function makeMessage(nickname, payload) {
+    const msg = { nickname, payload }
+    return JSON.stringify(msg)
+}
+
+socket.addEventListener('open', () => {
+    console.log('Connected to Server ')
+})
+
+socket.addEventListener('message', (message) => {
+    const li = document.createElement('li')
+    console.log(message.data)
+    li.innerText = message.data
+    messageList.append(li)
+    document.getElementById('messageArea').scrollTop =
+        document.getElementById('messageArea').scrollHeight
+})
+
+socket.addEventListener('close', () => {
+    console.log('Disconnected from Server')
+})
+
+function handleSubmit(event) {
+    event.preventDefault()
+    const input = messageForm.querySelector('input')
+    socket.send(makeMessage(user.nickname, input.value))
+    input.value = ''
+}
+
+// function handleNickSubmit(event) {
+//     event.preventDefault()
+//     const userinfo = user
+//     socket.send(userinfo)
+// }
+
+messageForm.addEventListener('submit', handleSubmit)
+// nickForm.addEventListener('submit', handleNickSubmit)
+
+/////////////////////////////////////////////////
 function postOrder(user, order) {
     if (!order.length) {
         return
