@@ -44,11 +44,11 @@ router.post('/users', async (req, res) => {
             })
             return
         }
-        const nick_check = /^[a-zA-Z가-힣]+[a-zA-z가-힣0-9]{3,7}$/g
+        const nick_check = /^[a-zA-Z가-힣]+[a-zA-z가-힣0-9]{1,7}$/g
         const eng_check = /^[a-zA-Z]+[a-z0-9]{2,15}$/g
         const pw_check = /^[a-zA-Z]+[a-z0-9~!@#$%^&*()_+<>?:{}]{3,15}$/g
         const email_check =
-            /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i
+            /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i
 
         const id = email.split('@')[0]
 
@@ -57,7 +57,7 @@ router.post('/users', async (req, res) => {
         if (!nick_check.test(nickname)) {
             res.status(400).send({
                 errorMessage:
-                    '닉네임은 한글,영어로 시작하는 숫자를 이용한 4~16자여야만합니다.',
+                    '닉네임은 한글,영어로 시작하는 숫자를 이용한 2~16자여야만합니다.',
             })
             return
         }

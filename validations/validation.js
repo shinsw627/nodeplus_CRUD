@@ -3,8 +3,7 @@ module.exports = {
         const [localPart, domain, ...etc] = email.split('@')
 
         const email_check =
-            /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i
-
+            /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i
         const id = email.split('@')[0]
 
         if (!email_check.test(email)) {
