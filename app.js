@@ -58,7 +58,7 @@ app.get('/rewrite', (req, res) => {
 //     })
 // })
 
-//채팅 기록 100개 이상시 50개 삭제
+//채팅 기록 100개 이상시 절반으로 만드는 타노스 함수
 const deleteMaxChat = async () => {
     try {
         const chats = await Chat.find().sort('-order').exec()
@@ -88,9 +88,9 @@ const currentOnUserInfo = []
 
 io.on('connection', (socket) => {
     deleteMaxChat()
-    showChatLog()
     io.emit('currentOn', currentOn)
     socket.on('join', (nickname) => {
+        showChatLog()
         const userNickname = nickname
         const userSocketId = {
             // 특정 닉네임에게만 보내는 이벤트를 위한 socket.id저장
@@ -131,6 +131,7 @@ io.on('connection', (socket) => {
     //두번째로 백엔드에서 받기
     socket.on('sendMsg', async (data) => {
         try {
+            deleteMaxChat()
             const { nickname, msg } = data
             const maxOrder = await Chat.findOne({}).sort('-order').exec()
             let order = 1

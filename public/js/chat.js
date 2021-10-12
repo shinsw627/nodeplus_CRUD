@@ -41,11 +41,11 @@ sendButton.addEventListener('click', sendMsg)
 socket.on('currentOn', (data) => {
     userContainer.innerHTML = ''
     const userListLabel = document.createElement('label')
-    userListLabel.innerText = `접속유저(${data.length}명): `
+    userListLabel.innerText = `접속유저(${data.length}명):`
     userContainer.appendChild(userListLabel)
     for (let i = 0; i < data.length; i++) {
         const h = document.createElement('h5')
-        h.innerText = data[i] + ' 님, '
+        h.innerText = '⠀' + data[i] + ` 님`
         userContainer.appendChild(h)
     }
 
@@ -57,12 +57,8 @@ socket.on('currentOn', (data) => {
                         alt=""
                     />
                 </a>`
-
+    //?? 제이쿼리 쓰니까 이렇게 편해??
     $('.user-container').append(dom)
-    // const homeButton = document.createElement("button")
-    // homeButton.classList.add('sent')
-
-    // userContainer.appendChild
 })
 
 //네번째 프론트에서 받기
