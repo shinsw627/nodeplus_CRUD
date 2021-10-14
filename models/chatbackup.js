@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const ChatSchema = new mongoose.Schema({
+const ChatBackupSchema = new mongoose.Schema({
     nickname: String,
     msg: String,
     time: String,
@@ -8,4 +8,4 @@ const ChatSchema = new mongoose.Schema({
     date: Number,
 })
 
-module.exports = mongoose.model('chat', ChatSchema)
+module.exports = mongoose.model('chatBackup', ChatBackupSchema)

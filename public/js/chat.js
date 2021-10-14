@@ -82,6 +82,7 @@ socket.on('chatLog', (data) => {
     displayContainer.scrollTo(0, displayContainer.scrollHeight)
 })
 
+//li태그 만드는 모델 설정
 function LiModel(nickname, msg, time) {
     this.name = nickname
     this.msg = msg
